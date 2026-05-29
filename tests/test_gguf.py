@@ -35,3 +35,45 @@ def test_embed_with_tiny_model(monkeypatch):
     except json.JSONDecodeError:
         assert False, result2.output
     assert len(vector) == 384
+
+
+def test_register_and_unregister_model(monkeypatch, tmp_path):
+    monkeypatch.setenv("LLM_USER_PATH", str(tmp_path))
+    runner = CliRunner()
+    # register-model needs a file that exists; contents are irrelevant here
+    dummy = tmp_path / "fake.gguf"
+    dummy.write_bytes(b"not a real model")
+    models_file = tmp_path / "gguf" / "models.json"
+
+    result = runner.invoke(cli, ["gguf", "register-model", "fake-model", str(dummy)])
+    assert result.exit_code == 0, result.output
+    assert "fake-model" in json.loads(models_file.read_text())
+
+    result2 = runner.invoke(cli, ["gguf", "unregister-model", "fake-model"])
+    assert result2.exit_code == 0, result2.output
+    assert "fake-model" not in json.loads(models_file.read_text())
+
+    # Unregistering again should fail cleanly with a non-zero exit code
+    result3 = runner.invoke(cli, ["gguf", "unregister-model", "fake-model"])
+    assert result3.exit_code != 0
+
+
+def test_register_and_unregister_embed_model(monkeypatch, tmp_path):
+    monkeypatch.setenv("LLM_USER_PATH", str(tmp_path))
+    runner = CliRunner()
+    dummy = tmp_path / "fake-embed.gguf"
+    dummy.write_bytes(b"not a real model")
+    models_file = tmp_path / "gguf" / "embed-models.json"
+
+    result = runner.invoke(
+        cli, ["gguf", "register-embed-model", "fake-embed", str(dummy)]
+    )
+    assert result.exit_code == 0, result.output
+    assert "fake-embed" in json.loads(models_file.read_text())
+
+    result2 = runner.invoke(cli, ["gguf", "unregister-embed-model", "fake-embed"])
+    assert result2.exit_code == 0, result2.output
+    assert "fake-embed" not in json.loads(models_file.read_text())
+
+    result3 = runner.invoke(cli, ["gguf", "unregister-embed-model", "fake-embed"])
+    assert result3.exit_code != 0
