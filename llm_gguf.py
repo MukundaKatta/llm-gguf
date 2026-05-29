@@ -270,32 +270,8 @@ class GgufChatModel(llm.Model):
 
         if not stream:
             model = self.get_model()
-            completion = model.create_chat_completion(
-                messages=messages,
-                tools=[
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": "search_blog",
-                            "description": "Search for posts on the blog.",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "query": {
-                                        "type": "string",
-                                        "description": "Search query, keywords only",
-                                    }
-                                },
-                                "required": ["query"],
-                                "additionalProperties": False,
-                            },
-                        },
-                    }
-                ],
-                tool_choice="auto",
-            )
-            breakpoint()
-            return [completion["choices"][0]["text"]]
+            completion = model.create_chat_completion(messages=messages)
+            return [completion["choices"][0]["message"]["content"]]
 
         # Streaming
         model = self.get_model()
