@@ -184,6 +184,32 @@ def register_commands(cli):
         models_file.write_text(json.dumps(models, indent=2))
 
     @gguf.command()
+    @click.argument("model_id")
+    def unregister_model(model_id):
+        "Remove a registered GGUF model"
+        models_file = _ensure_models_file()
+        models = json.loads(models_file.read_text())
+        if model_id not in models:
+            raise click.ClickException(
+                "Model '{}' is not registered".format(model_id)
+            )
+        del models[model_id]
+        models_file.write_text(json.dumps(models, indent=2))
+
+    @gguf.command()
+    @click.argument("model_id")
+    def unregister_embed_model(model_id):
+        "Remove a registered GGUF embedding model"
+        models_file = _ensure_embed_models_file()
+        models = json.loads(models_file.read_text())
+        if model_id not in models:
+            raise click.ClickException(
+                "Embedding model '{}' is not registered".format(model_id)
+            )
+        del models[model_id]
+        models_file.write_text(json.dumps(models, indent=2))
+
+    @gguf.command()
     def models():
         "List registered GGUF models"
         models_file = _ensure_models_file()
